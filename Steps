@@ -1,0 +1,70 @@
+
+Steps
+1. Install the AWS SDK
+The AWS SDK for JavaScript is required to interact with AWS services. You’ll use it to push custom metrics to CloudWatch.
+
+SSH into your EC2 instance:
+--ssh -i "your-key.pem" ec2-user@<your-ec2-public-dns>
+
+
+Navigate to your application directory (replace /path/to/your/app as needed):
+--cd /path/to/your/app
+
+Install the AWS SDK:
+--npm install aws-sdk
+
+---------------------------------------------
+2. Import the AWS SDK and Set Up CloudWatch
+In the main application file (app.js or server.js), import the AWS SDK and create an instance of the CloudWatch service.
+
+// Import the AWS SDK
+const AWS = require('aws-sdk');
+
+// Set Up CloudWatch
+const cloudwatch = new AWS.CloudWatch();
+
+-----------------------------------------------
+3. Create the Custom Metrics Function
+Define a function that sends custom metrics to CloudWatch. This example logs the number of active users, but you can adjust the metric and its value to meet your needs.
+//
+function sendCustomMetric(activeUsersCount) {
+  const params = {
+    MetricData: [
+      {
+        MetricName: 'ActiveUsers', // Custom metric name
+        Dimensions: [{ Name: 'InstanceId', Value: process.env.INSTANCE_ID || 'dummy-instance-id' }], // Replace with your EC2 instance ID
+        Unit: 'Count',
+        Value: activeUsersCount // Pass dynamic value for active users
+      }
+    ],
+    Namespace: 'MyAppMetrics' // Your custom namespace
+  };
+
+  cloudwatch.putMetricData(params, (err, data) => {
+    if (err) {
+      console.error("Error sending metric:", err);
+    } else {
+      console.log("Metric sent successfully:", data);
+    }
+  });
+}
+
+-----------------------------------------
+//
+4. Call the Function Periodically
+To log custom metrics regularly, set an interval to call the sendCustomMetric function. Adjust the interval and logic as needed based on the application's metric requirements.
+
+// Example usage: Log active users every minute
+setInterval(() => {
+  const activeUsersCount = Math.floor(Math.random() * 100); // Replace with your logic to get active users
+  sendCustomMetric(activeUsersCount);
+}, 60000); // Call every minute
+
+--------------------------------
+
+5. Test the Application
+Run the Application:
+--node app.js
+
+
+Verify Metrics in CloudWatch:
